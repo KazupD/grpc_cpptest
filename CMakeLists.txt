@@ -11,8 +11,8 @@ link_directories("${GRPC_INSTALL_DIR}/lib")
 find_package(Protobuf CONFIG REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
 
-set(PROTO_SRCS example.pb.cc example.grpc.pb.cc)
-set(PROTO_HDRS example.pb.h example.grpc.pb.h)
+set(PROTO_SRCS interface.pb.cc interface.grpc.pb.cc)
+set(PROTO_HDRS interface.pb.h interface.grpc.pb.h)
 
 # Server target
 add_executable(grpc_server server.cpp ${PROTO_SRCS})

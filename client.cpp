@@ -3,44 +3,62 @@
 #include <string>
 
 #include <grpcpp/grpcpp.h>
-#include "example.grpc.pb.h"
+#include "interface.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
-using example::ExampleService;
-using example::HelloRequest;
-using example::HelloReply;
 
-class ExampleClient {
+class PoseClient {
 public:
-    ExampleClient(std::shared_ptr<Channel> channel)
-        : stub_(ExampleService::NewStub(channel)) {}
+    PoseClient(std::shared_ptr<Channel> channel)
+        : stub_(PoseService::PoseService::NewStub(channel)) {}
 
-    std::string SayHello(const std::string& name) {
-        HelloRequest request;
-        request.set_name(name);
+    std::string SendCoordinates(float pos_x, float pos_y, float pos_z,
+                                 float roll, float pitch, float yaw) {
+        // Prepare the request
+        PoseService::CoordinatesRequest request;
+        request.set_position_x(pos_x);
+        request.set_position_y(pos_y);
+        request.set_position_z(pos_z);
+        request.set_orientation_roll(roll);
+        request.set_orientation_pitch(pitch);
+        request.set_orientation_yaw(yaw);
 
-        HelloReply reply;
+        // Prepare the response
+        PoseService::CoordinatesResponse response;
         ClientContext context;
 
-        Status status = stub_->SayHello(&context, request, &reply);
+        // Make the RPC call
+        Status status = stub_->SendCoordinates(&context, request, &response);
 
         if (status.ok()) {
-            return reply.message();
+            return response.message();
         } else {
-            std::cerr << "RPC failed" << std::endl;
-            return "";
+            std::cerr << "RPC failed: " << status.error_message() << std::endl;
+            return "RPC failed.";
         }
     }
 
 private:
-    std::unique_ptr<ExampleService::Stub> stub_;
+    std::unique_ptr<PoseService::PoseService::Stub> stub_;
 };
 
 int main() {
-    ExampleClient client(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
-    std::string response = client.SayHello("World");
-    std::cout << "Response: " << response << std::endl;
+    // Connect to the server
+    PoseClient client(grpc::CreateChannel("localhost:50051", grpc::InsecureChannelCredentials()));
+
+    // Send random coordinates and print the response
+    float random_pos_x = 1.23f;
+    float random_pos_y = 4.56f;
+    float random_pos_z = 7.89f;
+    float random_roll = 0.12f;
+    float random_pitch = 3.45f;
+    float random_yaw = 6.78f;
+
+    std::string response = client.SendCoordinates(random_pos_x, random_pos_y, random_pos_z,
+                                                   random_roll, random_pitch, random_yaw);
+    std::cout << "Client received: " << response << std::endl;
+
     return 0;
 }
